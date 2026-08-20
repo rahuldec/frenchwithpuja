@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-const SHEET_ID = "1YfxnKXRMKJ8VtiWKtAYleXUXcu-3KV7FQ1rTbr4cvCw";
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSda-Fv3mJNwnkrk-TvirEYtCmmhqWk2FIh10kp-uZoxaypG6Mq4ZiO40Gjj2_tkwcakLq3v7L5Yfpk/pub?gid=0&single=true&output=csv";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -10,42 +11,69 @@ type Video = {
   link: string;
 };
 
-function parseGoogleVisualizationResponse(text: string): Video[] {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
+function parseCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let value = "";
+  let quoted = false;
 
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error("Unexpected Google Sheets response.");
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (quoted && next === '"') {
+        value += '"';
+        i += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (char === "," && !quoted) {
+      values.push(value.trim());
+      value = "";
+    } else {
+      value += char;
+    }
   }
 
-  const payload = JSON.parse(text.slice(start, end + 1));
-  const rows = payload?.table?.rows ?? [];
+  values.push(value.trim());
+  return values;
+}
 
-  return rows
-    .map((row: { c?: Array<{ v?: unknown } | null> }) => {
-      const topic = String(row?.c?.[0]?.v ?? "").trim();
-      const link = String(row?.c?.[1]?.v ?? "").trim();
+function parseCsv(text: string): Video[] {
+  const lines = text
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .filter((line) => line.trim());
+
+  if (lines.length <= 1) return [];
+
+  return lines
+    .slice(1)
+    .map((line) => {
+      const [topic = "", link = ""] = parseCsvLine(line);
       return { topic, link };
     })
-    .filter((video: Video) => video.topic && video.link && /^https?:\/\//i.test(video.link));
+    .filter(
+      (video) =>
+        video.topic &&
+        video.link &&
+        /^https?:\/\//i.test(video.link),
+    );
 }
 
 export async function GET() {
-  const query = encodeURIComponent("select A,B where A is not null and B is not null");
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=${query}`;
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch(SHEET_CSV_URL, {
       cache: "no-store",
-      headers: { Accept: "text/plain" },
+      headers: { Accept: "text/csv" },
     });
 
     if (!response.ok) {
       throw new Error(`Google Sheets returned ${response.status}.`);
     }
 
-    const text = await response.text();
-    const videos = parseGoogleVisualizationResponse(text);
+    const csv = await response.text();
+    const videos = parseCsv(csv);
 
     return NextResponse.json(
       { videos },
