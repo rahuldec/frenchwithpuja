@@ -115,16 +115,26 @@ export default function Home() {
           <section className="grid" aria-label="Class recordings">
             {filteredVideos.map((video, index) => (
               <article className="card" key={`${video.link}-${index}`}>
-                <div className="player">
-                  <div className="player-accent" aria-hidden="true" />
-                  <iframe
-                    src={video.link}
-                    title={video.topic}
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                </div>
+                <a
+                  className={`generated-thumbnail thumbnail-${index % 3}`}
+                  href={video.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Watch ${video.topic}`}
+                >
+                  <div className="thumbnail-accent" aria-hidden="true"><span /><span /><span /></div>
+                  <div className="thumbnail-topline">FRENCH WITH PUJA <span>·</span> RECORDED CLASS</div>
+                  <div className="thumbnail-content">
+                    <span className="thumbnail-number">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="thumbnail-label">LEÇON DU JOUR</span>
+                    <strong>{video.topic}</strong>
+                  </div>
+                  <div className="thumbnail-bottom">
+                    <span className="thumbnail-brand">Apprendre · Pratiquer · Progresser</span>
+                    <span className="thumbnail-play">▶</span>
+                  </div>
+                  <div className="thumbnail-french-mark" aria-hidden="true">F</div>
+                </a>
                 <div className="card-body">
                   <div className="lesson-meta"><span className="lesson-number">{String(index + 1).padStart(2, "0")}</span><span>RECORDED LESSON</span></div>
                   <h2 className="topic">{video.topic}</h2>
