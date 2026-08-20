@@ -19,10 +19,7 @@ export default function Home() {
       const response = await fetch("/api/videos", { cache: "no-store" });
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data?.error || "Unable to load recordings.");
-      }
-
+      if (!response.ok) throw new Error(data?.error || "Unable to load recordings.");
       setVideos(Array.isArray(data.videos) ? data.videos : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load recordings.");
@@ -46,61 +43,72 @@ export default function Home() {
   return (
     <div className="page">
       <header className="header">
+        <div className="tricolor" aria-hidden="true"><span /><span /><span /></div>
         <div className="header-inner">
           <div className="brand">
-            <div className="logo">F</div>
+            <div className="logo"><span>F</span></div>
             <div>
               <div className="brand-title">French with Puja</div>
-              <div className="brand-subtitle">Class recordings</div>
+              <div className="brand-subtitle">Apprendre · Pratiquer · Progresser</div>
             </div>
           </div>
           <button className="refresh" onClick={loadVideos} type="button">
-            Refresh
+            ↻ <span>Refresh</span>
           </button>
         </div>
       </header>
 
       <main className="main">
         <section className="hero">
-          <div>
-            <p className="eyebrow">French lessons</p>
-            <h1>Watch your class recordings.</h1>
+          <div className="hero-copy-wrap">
+            <div className="eyebrow"><span className="flag-dot" /> French lessons</div>
+            <h1>Bienvenue.<br /><em>Let’s learn French.</em></h1>
             <p className="hero-copy">
-              All recorded sessions in one place. New recordings appear here automatically when they are added to the class sheet.
+              Your class recordings, beautifully organised in one place. New lessons appear automatically as they are added by your teacher.
             </p>
+            <div className="hero-note"><span>🇫🇷</span> Learn at your own pace · Rewatch anytime</div>
           </div>
-          <input
-            className="search"
-            type="search"
-            placeholder="Search topics…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            aria-label="Search recordings"
-          />
+          <div className="search-card">
+            <div className="search-label">Find a lesson</div>
+            <div className="search-wrap">
+              <span className="search-icon">⌕</span>
+              <input
+                className="search"
+                type="search"
+                placeholder="Search by topic…"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label="Search recordings"
+              />
+              {search && <button className="clear-search" onClick={() => setSearch("")} type="button" aria-label="Clear search">×</button>}
+            </div>
+            <div className="search-hint">Try “verbs”, “words”, or any lesson topic</div>
+          </div>
         </section>
 
-        <div className="toolbar">
-          <span className="count">
-            {loading ? "Loading recordings…" : `${filteredVideos.length} recording${filteredVideos.length === 1 ? "" : "s"}`}
-          </span>
+        <div className="section-heading">
+          <div>
+            <span className="section-kicker">La bibliothèque</span>
+            <h2>Your recordings</h2>
+          </div>
+          <div className="count-pill">
+            <span className="count-dot" />
+            {loading ? "Loading…" : `${filteredVideos.length} lesson${filteredVideos.length === 1 ? "" : "s"}`}
+          </div>
         </div>
 
-        {loading && <div className="state">Loading your recordings…</div>}
+        {loading && <div className="state"><div className="loader" /><strong>Preparing your lessons…</strong><span>Un instant, s’il vous plaît.</span></div>}
 
         {!loading && error && (
           <div className="state error">
-            {error}
-            <br />
-            <button className="refresh" onClick={loadVideos} type="button" style={{ marginTop: 14 }}>
-              Try again
-            </button>
+            <strong>Something went wrong.</strong>
+            <span>{error}</span>
+            <button className="try-again" onClick={loadVideos} type="button">Try again</button>
           </div>
         )}
 
         {!loading && !error && filteredVideos.length === 0 && (
-          <div className="state">
-            {search ? "No recordings match your search." : "No recordings have been added yet."}
-          </div>
+          <div className="state"><div className="empty-icon">F</div><strong>{search ? "Aucun résultat." : "No recordings yet."}</strong><span>{search ? "Try another topic." : "Your teacher’s recordings will appear here."}</span></div>
         )}
 
         {!loading && !error && filteredVideos.length > 0 && (
@@ -108,6 +116,7 @@ export default function Home() {
             {filteredVideos.map((video, index) => (
               <article className="card" key={`${video.link}-${index}`}>
                 <div className="player">
+                  <div className="player-accent" aria-hidden="true" />
                   <iframe
                     src={video.link}
                     title={video.topic}
@@ -117,9 +126,10 @@ export default function Home() {
                   />
                 </div>
                 <div className="card-body">
+                  <div className="lesson-meta"><span className="lesson-number">{String(index + 1).padStart(2, "0")}</span><span>RECORDED LESSON</span></div>
                   <h2 className="topic">{video.topic}</h2>
                   <a className="watch" href={video.link} target="_blank" rel="noreferrer">
-                    Open recording ↗
+                    <span className="play-icon">▶</span> Watch recording <span className="arrow">↗</span>
                   </a>
                 </div>
               </article>
@@ -128,7 +138,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="footer">French with Puja</footer>
+      <footer className="footer"><span className="footer-mark">F</span><span>French with Puja</span><span className="footer-separator">·</span><span>À bientôt!</span></footer>
     </div>
   );
 }
