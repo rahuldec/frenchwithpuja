@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 const SHEET_ID = "1YfxnKXRMKJ8VtiWKtAYleXUXcu-3KV7FQ1rTbr4cvCw";
-const SHEET_NAME = "Sheet1";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -33,7 +32,7 @@ function parseGoogleVisualizationResponse(text: string): Video[] {
 
 export async function GET() {
   const query = encodeURIComponent("select A,B where A is not null and B is not null");
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&tqx=out:json&tq=${query}`;
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=${query}`;
 
   try {
     const response = await fetch(url, {
