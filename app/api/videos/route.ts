@@ -63,7 +63,12 @@ function parseCsv(text: string): Video[] {
 
 export async function GET() {
   try {
-    const response = await fetch(SHEET_CSV_URL, {
+    // Google Sheets' published CSV can be cached even when the sheet has changed.
+    // Add a cache-busting query parameter so every portal refresh requests the
+    // latest published CSV instead of a previously cached response.
+    const sheetUrl = `${SHEET_CSV_URL}&_=${Date.now()}`;
+
+    const response = await fetch(sheetUrl, {
       cache: "no-store",
       headers: { Accept: "text/csv" },
     });
@@ -79,7 +84,9 @@ export async function GET() {
       { videos },
       {
         headers: {
-          "Cache-Control": "no-store, max-age=0",
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
         },
       },
     );
